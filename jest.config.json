@@ -1,0 +1,11 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "reporters": [
+    "default",
+    ["jest-html-reporter", {
+      "pageTitle": "Test Report",
+      "outputPath": "test-results/report.html"
+    }]
+  ]
+}

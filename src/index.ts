@@ -36,7 +36,8 @@ app.post("/print-pdf", async (req, res) => {
         res.send(pdfBuffer);
     } catch (err) {
         console.error("Failed to generate PDF:", err);
-        res.status(500).json({ error: "Failed to generate PDF", detail: err.message });
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        res.status(500).json({ error: "Failed to generate PDF", detail: errorMessage });
     } finally {
         await browser.close();
     }

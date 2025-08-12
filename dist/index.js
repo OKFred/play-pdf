@@ -1,14 +1,19 @@
-import express from "express";
-import { chromium } from "playwright";
-const app = express();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const playwright_1 = require("playwright");
+const app = (0, express_1.default)();
 const port = 3000;
-app.use(express.json({ limit: "2mb" }));
+app.use(express_1.default.json({ limit: "2mb" }));
 app.post("/print-pdf", async (req, res) => {
     const { url, storageState } = req.body;
     if (!url || !storageState) {
         return res.status(400).json({ error: "Missing url or storageState" });
     }
-    const browser = await chromium.launch();
+    const browser = await playwright_1.chromium.launch();
     const context = await browser.newContext({ storageState });
     const page = await context.newPage();
     try {
@@ -26,7 +31,8 @@ app.post("/print-pdf", async (req, res) => {
     }
     catch (err) {
         console.error("Failed to generate PDF:", err);
-        res.status(500).json({ error: "Failed to generate PDF", detail: err.message });
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        res.status(500).json({ error: "Failed to generate PDF", detail: errorMessage });
     }
     finally {
         await browser.close();
