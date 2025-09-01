@@ -1,22 +1,123 @@
 import express from "express";
 import { chromium } from "playwright";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 const app = express();
 const port = 3000;
 
+// Swagger/OpenAPI 3.1 配置
+const swaggerOptions = {
+    definition: {
+        openapi: "3.1.0",
+        info: {
+            title: "Play PDF API",
+            version: "1.0.0",
+            description: "PDF generation service using Playwright",
+        },
+        servers: [
+            {
+                url: "http://localhost:3000",
+            },
+        ],
+    },
+    apis: [__filename], // 只扫描本文件的JSDoc
+};
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// /doc.json 返回OpenAPI JSON
+app.get("/doc.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerSpec);
+});
+
+// /doc 返回Swagger UI页面
+app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+setTimeout(() => {
+    console.log("Swagger UI available at http://localhost:3000/doc");
+}, 0);
 app.use(express.json({ limit: "2mb" }));
 
-
+/**
+ * @openapi
+ * /print-pdf:
+ *   post:
+ *     summary: 生成PDF文件
+ *     description: 根据传入的url和storageState生成PDF，支持截图模式和A4模式。
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: 需要生成PDF的页面URL
+ *                 example: "https://example.com"
+ *               storageState:
+ *                 type: object
+ *                 description: Playwright浏览器上下文的storageState对象
+ *               useA4:
+ *                 type: boolean
+ *                 description: 是否使用A4纸张格式
+ *                 default: false
+ *               useScreenshot:
+ *                 type: boolean
+ *                 description: 是否使用截图模式
+ *                 default: false
+ *               cssSelector:
+ *                 type: string
+ *                 description: 可选，指定截图的CSS选择器
+ *                 example: ""
+ *             required:
+ *               - url
+ *     responses:
+ *       200:
+ *         description: 返回生成的PDF文件
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: 请求参数缺失
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: 生成PDF失败
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
 app.post("/print-pdf", async (req, res) => {
+
     let { url, storageState, useA4, useScreenshot, cssSelector } = req.body;
     // 如果传入cssSelector，则强制使用截图模式
     if (cssSelector) {
         useScreenshot = true;
     }
 
-
-    if (!url || !storageState) {
-        return res.status(400).json({ error: "Missing url or storageState" });
+    // url校验
+    if (!url) {
+        return res.status(400).json({ message: "Missing url" });
+    }
+    try {
+        const parsedUrl = new URL(url);
+        if (!(parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:")) {
+            return res.status(400).json({ message: "Invalid url: only http(s) is allowed" });
+        }
+    } catch (e) {
+        return res.status(400).json({ message: "Invalid url format" });
     }
 
     const browser = await chromium.launch({
@@ -112,7 +213,7 @@ app.post("/print-pdf", async (req, res) => {
     } catch (err) {
         console.error("Failed to generate PDF:", err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        res.status(500).json({ error: "Failed to generate PDF", detail: errorMessage });
+        res.status(500).json({ message: `Failed to generate PDF: ${errorMessage}` });
     } finally {
         await browser.close();
     }
