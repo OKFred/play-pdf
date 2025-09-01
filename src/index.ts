@@ -6,8 +6,14 @@ const port = 3000;
 
 app.use(express.json({ limit: "2mb" }));
 
+
 app.post("/print-pdf", async (req, res) => {
-    const { url, storageState, useA4, useScreenshot } = req.body;
+    let { url, storageState, useA4, useScreenshot, cssSelector } = req.body;
+    // 如果传入cssSelector，则强制使用截图模式
+    if (cssSelector) {
+        useScreenshot = true;
+    }
+
 
     if (!url || !storageState) {
         return res.status(400).json({ error: "Missing url or storageState" });
@@ -30,8 +36,19 @@ app.post("/print-pdf", async (req, res) => {
 
         let pdfBuffer: Buffer;
         if (useScreenshot) {
-            // 1. 截图
-            const screenshotBuffer = await page.screenshot({ fullPage: true });
+            let screenshotBuffer: Buffer;
+            if (cssSelector) {
+                // 只截取第一个匹配的元素
+                const elementHandle = await page.$(cssSelector);
+                if (!elementHandle) {
+                    throw new Error(`Selector '${cssSelector}' not found on page`);
+                }
+                screenshotBuffer = await elementHandle.screenshot();
+                await elementHandle.dispose();
+            } else {
+                // 全页截图
+                screenshotBuffer = await page.screenshot({ fullPage: true });
+            }
             const base64Img = screenshotBuffer.toString("base64");
             const dataUrl = `data:image/png;base64,${base64Img}`;
 
