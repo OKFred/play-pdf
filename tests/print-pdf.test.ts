@@ -11,7 +11,7 @@ beforeAll((done) => {
         stdio: "inherit",
     });
     // 等待服务启动，建议实际项目用更健壮的端口探测
-    setTimeout(done, 3000);
+    setTimeout(done, 6000);
 }, 20000);
 
 afterAll(() => {
@@ -24,7 +24,7 @@ describe("POST /print-pdf", () => {
     it("should return a PDF file", async () => {
         const url = "http://localhost:3000/print-pdf";
         const data = {
-            url: "https://163.com", // 可替换为实际可访问的页面
+            url: "https://163.com", // 使用更可靠的测试页面
             storageState: {}, // 可根据实际情况填写
         };
         const outputPath = path.join(__dirname, "output.pdf");

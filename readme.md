@@ -1,16 +1,11 @@
 # 运行步骤
 
--   npm install
--   npm run build
--   npm start
-
+-   pnpm install
+-   pnpm run build
+-   pnpm run test
 
 启动后，会看到
 PDF server listening at http://localhost:3000
 
-然后新开一个控制台，运行
-```bash
-node test.js
-```
-
-即可得到对应网页的pdf
+在 test-results 目录下即可得到对应网页的 pdf
+[查看测试结果](./test-results)
