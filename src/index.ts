@@ -1,7 +1,6 @@
 import express from "express";
 import { chromium } from "playwright";
-import fs from "fs";
-import path from "path";
+
 const app = express();
 const port = 3000;
 
@@ -21,7 +20,7 @@ app.post("/print-pdf", async (req, res) => {
 
     try {
         await page.goto(url, { waitUntil: "networkidle" });
-
+        await new Promise((r) => setTimeout(r, 5000)); // 等待额外的5秒，确保页面完全加载
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,

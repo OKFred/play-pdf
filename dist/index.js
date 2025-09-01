@@ -18,6 +18,7 @@ app.post("/print-pdf", async (req, res) => {
     const page = await context.newPage();
     try {
         await page.goto(url, { waitUntil: "networkidle" });
+        await new Promise((r) => setTimeout(r, 5000)); // 等待额外的5秒，确保页面完全加载
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,
