@@ -18,6 +18,9 @@ RUN pnpm install
 COPY . .
 RUN pnpm run build
 
+# 安装playwright依赖
+RUN npx playwright install --with-deps
+
 EXPOSE 3001
 
 # 执行启动命令
