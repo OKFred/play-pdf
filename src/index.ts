@@ -4,7 +4,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Swagger/OpenAPI 3.1 配置
 const swaggerOptions = {
@@ -100,7 +100,6 @@ app.use(express.json({ limit: "2mb" }));
  *                   type: string
  */
 app.post("/print-pdf", async (req, res) => {
-
     let { url, storageState, useA4, useScreenshot, cssSelector } = req.body;
     // 如果传入cssSelector，则强制使用截图模式
     if (cssSelector) {
@@ -217,6 +216,10 @@ app.post("/print-pdf", async (req, res) => {
     } finally {
         await browser.close();
     }
+});
+
+app.all("/", (req, res) => {
+    res.send("Play PDF Server is running. Visit /doc for API documentation.");
 });
 
 app.listen(port, () => {
