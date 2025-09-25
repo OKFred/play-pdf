@@ -18,8 +18,8 @@ RUN pnpm install
 COPY . .
 RUN pnpm run build
 
-# 安装playwright依赖
-RUN npx playwright install --with-deps
+# 只安装 Chromium 浏览器（Chrome 的开源版本）
+RUN npx playwright install --with-deps chromium
 
 EXPOSE 3001
 
