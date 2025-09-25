@@ -45,7 +45,7 @@ app.use(express.json({ limit: "2mb" }));
 
 /**
  * @openapi
- * /print-pdf:
+ * /api/print-pdf:
  *   post:
  *     summary: 生成PDF文件
  *     description: 根据传入的url和storageState生成PDF，支持截图模式和A4模式。
@@ -104,7 +104,7 @@ app.use(express.json({ limit: "2mb" }));
  *                 message:
  *                   type: string
  */
-app.post("/print-pdf", async (req, res) => {
+app.post("/api/print-pdf", async (req, res) => {
     let { url, storageState, useA4, useScreenshot, cssSelector } = req.body;
     // 如果传入cssSelector，则强制使用截图模式
     if (cssSelector) {

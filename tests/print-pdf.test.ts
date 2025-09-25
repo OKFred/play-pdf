@@ -20,9 +20,9 @@ afterAll(() => {
     }
 });
 
-describe("POST /print-pdf", () => {
+describe("POST /api/print-pdf", () => {
     it("should return a PDF file", async () => {
-        const url = "http://localhost:3000/print-pdf";
+        const url = "http://localhost:3000/api/print-pdf";
         const data = {
             url: "https://163.com", // 使用更可靠的测试页面
             storageState: {}, // 可根据实际情况填写
