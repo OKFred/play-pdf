@@ -136,7 +136,7 @@ app.post("/api/print-pdf", async (req, res) => {
 
     try {
         console.log("Generating PDF for URL:", url);
-        await page.goto(url, { waitUntil: "networkidle" });
+        await page.goto(url, { waitUntil: "domcontentloaded" });
         await new Promise((r) => setTimeout(r, 5000)); // 等待额外的5秒，确保页面完全加载
 
         let pdfBuffer: Buffer;
