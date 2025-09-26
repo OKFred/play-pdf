@@ -75,6 +75,10 @@ app.use(express.json({ limit: "2mb" }));
  *                 type: string
  *                 description: 可选，指定截图的CSS选择器
  *                 example: ""
+ *               html:
+ *                 type: string
+ *                 description: 可选，直接渲染的HTML内容。如果提供此参数，将忽略url参数
+ *                 example: "<html><body><h1>Hello World from HTML!</h1><p>This is a test PDF generated from HTML content.</p><img src='https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png' /></body></html>"
  *             required:
  *               - url
  *     responses:
@@ -105,23 +109,27 @@ app.use(express.json({ limit: "2mb" }));
  *                   type: string
  */
 app.post("/api/print-pdf", async (req, res) => {
-    let { url, storageState, useA4, useScreenshot, cssSelector } = req.body;
+    let { url, storageState, useA4, useScreenshot, cssSelector, html } = req.body;
     // 如果传入cssSelector，则强制使用截图模式
     if (cssSelector) {
         useScreenshot = true;
     }
 
-    // url校验
-    if (!url) {
-        return res.status(400).json({ message: "Missing url" });
+    // 参数验证：必须提供 url 或 html 其中之一
+    if (!url && !html) {
+        return res.status(400).json({ message: "Missing url or html parameter" });
     }
-    try {
-        const parsedUrl = new URL(url);
-        if (!(parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:")) {
-            return res.status(400).json({ message: "Invalid url: only http(s) is allowed" });
+
+    // 如果提供了 url，进行 URL 格式验证
+    if (url) {
+        try {
+            const parsedUrl = new URL(url);
+            if (!(parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:")) {
+                return res.status(400).json({ message: "Invalid url: only http(s) is allowed" });
+            }
+        } catch (e) {
+            return res.status(400).json({ message: "Invalid url format" });
         }
-    } catch (e) {
-        return res.status(400).json({ message: "Invalid url format" });
     }
 
     const browser = await chromium.launch({
@@ -135,8 +143,16 @@ app.post("/api/print-pdf", async (req, res) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
 
     try {
-        console.log("Generating PDF for URL:", url);
-        await page.goto(url, { waitUntil: "domcontentloaded" });
+        console.log(html ? "Generating PDF from HTML content" : `Generating PDF for URL: ${url}`);
+
+        if (html) {
+            // 如果提供了 HTML 内容，直接设置页面内容
+            await page.setContent(html, { waitUntil: "domcontentloaded" });
+        } else {
+            // 否则访问 URL
+            await page.goto(url, { waitUntil: "domcontentloaded" });
+        }
+
         await new Promise((r) => setTimeout(r, 5000)); // 等待额外的5秒，确保页面完全加载
 
         let pdfBuffer: Buffer;
